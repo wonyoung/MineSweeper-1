@@ -16,8 +16,10 @@ cabal-version:       >=1.8
 
 executable MineSweeper
   main-is:           Main.hs 
-  -- other-modules:       
-  build-depends:       base ==4.5.*
+  other-modules:     ConsoleDriver
+                   , MineSweeper
+
+  build-depends:     base ==4.5.*
 
 Test-Suite tests
   Type:              exitcode-stdio-1.0
