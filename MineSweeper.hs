@@ -1,13 +1,33 @@
 module MineSweeper where
 
-newtype CleanCell = CleanCell { adjMine :: Int }  deriving (Show, Eq)
-data MineCell = MineCell deriving (Show, Eq)
+import Data.Char 
+
+newtype CleanCell = CleanCell { adjMine :: Int }  deriving (Eq)
+data MineCell = MineCell deriving (Eq)
 type Cell = Either MineCell CleanCell
 
 -- disables 'Checked MineCell' at type level which corresponds to 'Boomed' type
-data CellState = Unchecked (Marked Cell) | Checked CleanCell | Boomed deriving (Show, Eq)
-data Marked c = Nomark c | Flag c | Question c deriving (Show, Eq)
+data CellState = Unchecked (Marked Cell) | Checked CleanCell | Boomed deriving (Eq)
+data Marked c = Nomark c | Flag c | Question c deriving (Eq)
 data Event = Mark | Check deriving (Show, Eq)
+
+type Board = [[CellState]]
+
+instance Show CleanCell where
+  show c = show $ adjMine c
+
+instance Show MineCell where
+  show m = "*"
+
+instance Show c => Show (Marked c) where
+  show (Nomark c) = "_"
+  show (Flag c) = "F"
+  show (Question c) = "?"
+
+instance Show CellState where
+  show (Unchecked mc) = show mc
+  show (Checked c) = show c
+  show Boomed = "X"
 
 getCell :: Marked c -> c
 getCell (Nomark c) = c
@@ -16,7 +36,7 @@ getCell (Question c) = c
 
 nextState :: CellState -> Event -> CellState
 nextState cs Check = case cs of
-  -- at first, I've missed this case: Flagged Cell should not receive Check event.
+  -- Previously, I've missed this case: Flagged Cell should not receive Check event.
   Unchecked (Flag c) -> cs
   Unchecked mc -> case getCell mc of
                   Left MineCell -> Boomed
