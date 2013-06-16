@@ -1,1 +1,64 @@
+* 백그라운드
+  MineSweeper(지뢰찾기)는 Board 에서 진행된다. Board는 여러 개의 Cell 로
+  구성되며 Cell 은 Mine 을 가지고 있거나 그렇지 않을 수 있다. 플레이어는 Mine
+  이 있는 Cell을 제외한 나머지 Cell 들을 모두 Check 하면 게임을 이긴다. 
+
+* Cell
+  Cell 은 마인을 가진 MineCell 과 마인이 없는 CleanCell 두 종류로 구분된다.
+  CleanCell 은 인접한 최대 8개의 셀 중 MineCell 이 몇 개 있는 지에 대한 정보를 포함하고 있다. 
+  예를 들어, CleanCell 3 이면, 인접한 셀 들중 MineCell 이 3개 있음을 의미한다.
+
+* CellState
+  Cell의 상태를 표현하는 CellState 는 마인이 없음를 확인한 1) Checked 와 아직
+  확인을 못한 2) Unchecked , 그리고 마인이 있는 셀이 폭파된 3) Boomed 상태를
+  가질 수 있다. 
+  Unchecked 상태일 때는 플레이어가 Mark 정보를 넣을 수 있다. 
+
+* Marked Cell
+  플레이어는 마인이 있는 지 없는 지 판단하는 과정에서 Cell 에 정보를 새길 수
+  있다. Nomark 는 아무런 정보를 새기지 않은 경우이며, Flag 는 마인이 있다고
+  표시할 때 쓰며, Question 은 마인이 있을 지 없을 지 잘 모르겠다는 의미를 줄
+  때 사용한다. 
+
+* Board
+  Board 는 CellState 들로 구성된 정사각형이다. CellState 의 Cell 은 Board
+  안에서 다른 Cell 
+
+* Event
+  플레이어는 특정 Cell 에 대해 Mark 나 Check 이벤트를 줄 수 있다. Mark 는 Cell
+  에 Mark 를 다음 Mark 로 변경할 때 사용되며, Check 는 Mine 이 없다고 판단했을
+  때 정말인지 확인하기 위해 사용한다. 만약 Mine 이 있는 Cell 에 Check 이벤트를
+  주면 플레이어가 게임에서 진 것으로 종료된다. 단, Cell 의 Mark 가 Flag
+  상태라면 Check 이벤트는 무시된다. Mark 이벤트는 Nomark, Flag, Question 로
+  Cell 의 Mark 정보를 바꾼다. 
+
+* Game
+  Board 에서 CellState 가 Boomed 상태가 없거나 MineCell 을 제외한 모든 Cell 이
+  Checked 될 때까지 사용자로 부터 Event 를 입력받는다.
+
+* state transition table
+
+  아래 표에서 states 는 최대 3개의 알파벳으로 표기되며 각 자리마다 다음의 의미와
+  값들을 가진다.
+  첫 번째 자리: Cell 을 Check 했는 지 여부 혹은 Boomed 상태를 의미 
+    U : Unchecked 
+    C : Checked
+    B : Boomed
+  두 번째 자리: Unchecked 상태에서 Mark 의 종류를 의미
+    N : Nomark
+    F : Flag
+    Q : Question
+  세 번째 자리: Cell 의 종류를 의미
+    M : MineCell
+    C : CleanCell
+  CC 는 Checked CleanMine 을 의미
+
+    +-------------------------------------------
+    | states
+----+-------------------------------------------
+evt | UNC | UNM | UFC | UFM | UQC | UQM | CC | B 
+----+-----+-----+-----+-----+-----+-----+----+--
+ch  | CC  |  B  | UFC | UFM | CC  |  B  | CC | B
+mk  | UFC | UFM | UQC | UQM | UNC | UNM | CC | B
+----+-----+-----+-----+-----+-----+-----+----+--
 
