@@ -26,22 +26,29 @@ repl b = do
   printBoard b
   let gamestate = getGameState b 
   case gamestate of
-    Lose -> putStrLn "Lose!"
-    Win -> putStrLn "Win!"
-    Playing -> putStrLn "Type command"
-  cmd <- getLine
-  case words cmd of
-    "C":x:[y] -> repl $ applyEvent b Check (read x, read y)
-    "M":x:[y] -> repl $ applyEvent b Mark (read x, read y)
-    otherwise -> do putStrLn "Unknown command"
-                    repl b
+    Lose -> do putStrLn "Lose!"
+               return Lose
+    Win -> do putStrLn "Win!"
+              return Win
+    Playing -> do  
+      putStrLn "Type command"
+      cmd <- getLine
+      case words cmd of
+       "C":x:[y] -> repl $ applyEvent b Check (read x, read y)
+       "M":x:[y] -> repl $ applyEvent b Mark (read x, read y)
+       otherwise -> do putStrLn "Unknown command"
+                       repl b
 
 applyEvent:: Board -> Event -> (Int, Int) -> Board
-applyEvent board evt (px, py) =
-  let (x, xRest) = splitAt (px - 1) board in
-  let (y, yRest) = splitAt (py - 1) (head xRest) in
-  let newState = nextState (head yRest) evt in
-  x ++ [y ++ [newState] ++ tail yRest] ++ tail xRest
+applyEvent board evt (px, py)
+  | not (inRange board px py) = board
+  | otherwise = 
+    let (x, xRest) = splitAt (px - 1) board in
+    let (y, yRest) = splitAt (py - 1) (head xRest) in
+    let newState = nextState (head yRest) evt in
+    x ++ [y ++ [newState] ++ tail yRest] ++ tail xRest
+  where inRange b x y = x > 0 && x <= length b && 
+                        y > 0 && y <= length b
       
 isLose :: Board -> Bool
 isLose b = not . null $ filter (== Boomed) $ concat b
