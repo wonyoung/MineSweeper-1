@@ -61,11 +61,39 @@ applyEvent board evt (px, py)
   | otherwise = 
     let (x, xRest) = splitAt (px - 1) board in
     let (y, yRest) = splitAt (py - 1) (head xRest) in
-    let newState = nextState (head yRest) evt in
-    x ++ [y ++ [newState] ++ tail yRest] ++ tail xRest
-  where inRange b x y = x > 0 && x <= length b && 
+    let prevState = head yRest in
+    let newState = nextState prevState evt in
+    let newBoard = x ++ [y ++ [newState] ++ tail yRest] ++ tail xRest in
+    case newState of
+      Checked (CleanCell 0) -> foldl (\board coord -> applyEvent board Check coord) 
+                                     newBoard
+                                     adjCleanCells
+      otherwise -> newBoard
+  where inRange b x y = x > 0 && x <= length b &&  
                         y > 0 && y <= length b
-      
+        adjCleanCells = getAdjCleanCells board (px, py)
+
+-- find adjacent coordinates of (CleanCell 0)       
+getAdjCleanCells :: Board -> (Int, Int) -> [(Int,Int)]
+getAdjCleanCells b (x, y) = 
+  [(newX, newY) | newX <- [x-1..x+1], 
+                  newY <- [y-1..y+1],
+                  (newX, newY) /= (x-1, y-1),
+                  (newX, newY) /= (x-1, y+1),
+                  (newX, newY) /= (x+1, y-1),
+                  (newX, newY) /= (x+1, y+1),
+                  newX >= 1, newX <= (length b),
+                  newY >= 1, newY <= (length b),
+                  isAdjCleanCell $ getCellState b (newX, newY)]
+  where getCellState b (px, py) = 
+          let (x, xRest) = splitAt (px - 1) b in
+          let (y, yRest) = splitAt (py - 1) (head xRest) in
+          head yRest
+        isAdjCleanCell (Unchecked (Nomark (Right (CleanCell 0)))) = True 
+        isAdjCleanCell (Unchecked (Flag (Right (CleanCell 0)))) = True 
+	isAdjCleanCell (Unchecked (Question (Right (CleanCell 0)))) = True 
+        isAdjCleanCell cellstate = False                    
+
 isLose :: Board -> Bool
 isLose b = not . null $ filter (== Boomed) $ concat b
 
