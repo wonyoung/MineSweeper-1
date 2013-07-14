@@ -10,8 +10,10 @@ type Cell = Either MineCell CleanCell
 data CellState = Unchecked (Marked Cell) | Checked CleanCell | Boomed deriving (Eq)
 data Marked c = Nomark c | Flag c | Question c deriving (Eq)
 data Event = Mark | Check deriving (Show, Eq)
+data GameState = Lose | Win | Playing deriving (Eq)
 
 type Board = [[CellState]]
+
 
 instance Show CleanCell where
   show c = show $ adjMine c
@@ -52,4 +54,37 @@ nextMark mc = case mc of
   Nomark c -> Flag c
   Flag c -> Question c
   Question c -> Nomark c
+
+applyEvent:: Board -> Event -> (Int, Int) -> Board
+applyEvent board evt (px, py)
+  | not (inRange board px py) = board
+  | otherwise = 
+    let (x, xRest) = splitAt (px - 1) board in
+    let (y, yRest) = splitAt (py - 1) (head xRest) in
+    let newState = nextState (head yRest) evt in
+    x ++ [y ++ [newState] ++ tail yRest] ++ tail xRest
+  where inRange b x y = x > 0 && x <= length b && 
+                        y > 0 && y <= length b
+      
+isLose :: Board -> Bool
+isLose b = not . null $ filter (== Boomed) $ concat b
+
+-- if there's no Unchecked (Marked CleanCell) and no Boomed state, then game win
+isWin :: Board -> Bool
+isWin b = (not $ isLose b) && (null $ filter isUncheckedCleanCell $ concat b)
+  where isUncheckedCleanCell (Unchecked mc) 
+          | isCleanCell mc = True
+          | otherwise = False
+        isUncheckedCleanCell (Checked c) = False
+        isUncheckedCleanCell Boomed = False
+        isCleanCell mc = case getCell mc of
+          Left MineCell -> False
+          otherwise -> True
+
+getGameState:: Board -> GameState
+getGameState b 
+ | isLose b  = Lose
+ | isWin b = Win
+ | otherwise = Playing
+
 

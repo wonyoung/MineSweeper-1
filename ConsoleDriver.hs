@@ -3,7 +3,6 @@ module ConsoleDriver where
 import MineSweeper
 import Data.List (intercalate)
 
-data GameState = Lose | Win | Playing deriving (Eq)
 
 board = genBoard [
   " 1 2 * 1 0 1 1 1",
@@ -38,39 +37,6 @@ repl b = do
        "M":x:[y] -> repl $ applyEvent b Mark (read x, read y)
        otherwise -> do putStrLn "Unknown command"
                        repl b
-
-applyEvent:: Board -> Event -> (Int, Int) -> Board
-applyEvent board evt (px, py)
-  | not (inRange board px py) = board
-  | otherwise = 
-    let (x, xRest) = splitAt (px - 1) board in
-    let (y, yRest) = splitAt (py - 1) (head xRest) in
-    let newState = nextState (head yRest) evt in
-    x ++ [y ++ [newState] ++ tail yRest] ++ tail xRest
-  where inRange b x y = x > 0 && x <= length b && 
-                        y > 0 && y <= length b
-      
-isLose :: Board -> Bool
-isLose b = not . null $ filter (== Boomed) $ concat b
-
--- if there's no Unchecked (Marked CleanCell) and no Boomed state, then game win
-isWin :: Board -> Bool
-isWin b = (not $ isLose b) && (null $ filter isUncheckedCleanCell $ concat b)
-  where isUncheckedCleanCell (Unchecked mc) 
-          | isCleanCell mc = True
-          | otherwise = False
-        isUncheckedCleanCell (Checked c) = False
-        isUncheckedCleanCell Boomed = False
-        isCleanCell mc = case getCell mc of
-          Left MineCell -> False
-          otherwise -> True
-
-getGameState:: Board -> GameState
-getGameState b 
- | isLose b  = Lose
- | isWin b = Win
- | otherwise = Playing
-
 
 printBoard :: Board -> IO()
 printBoard b = putStrLn $ intercalate "\n" (map show b)
