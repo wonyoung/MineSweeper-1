@@ -76,12 +76,7 @@ applyEvent board evt (px, py)
 -- find adjacent coordinates of (CleanCell 0)       
 getAdjCleanCells :: Board -> (Int, Int) -> [(Int,Int)]
 getAdjCleanCells b (x, y) = 
-  [(newX, newY) | newX <- [x-1..x+1], 
-                  newY <- [y-1..y+1],
-                  (newX, newY) /= (x-1, y-1),
-                  (newX, newY) /= (x-1, y+1),
-                  (newX, newY) /= (x+1, y-1),
-                  (newX, newY) /= (x+1, y+1),
+  [(newX, newY) | (newX, newY) <- [ (x-1, y), (x+1, y), (x, y-1), (x, y+1) ],
                   newX >= 1, newX <= (length b),
                   newY >= 1, newY <= (length b),
                   isAdjCleanCell $ getCellState b (newX, newY)]
